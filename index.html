@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gerador de Gráficos de Funções</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            -webkit-text-size-adjust: 100%;
+        }
+        
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 1.5rem;
+            margin: 10px 0;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .input-group {
+            margin-bottom: 12px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            height: 40px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        #resultado {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #e8f4fc;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .funcao {
+            font-size: 1.2rem;
+            color: #e74c3c;
+            margin: 10px 0;
+            text-align: center;
+            word-break: break-all;
+        }
+        
+        .grafico-container {
+            margin-top: 20px;
+            height: 300px;
+            min-height: 300px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .tabela-valores {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.8rem;
+            overflow-x: auto;
+            display: block;
+        }
+        
+        .tabela-valores th, .tabela-valores td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: center;
+        }
+        
+        .tabela-valores th {
+            background-color: #f2f2f2;
+        }
+        
+        #infoAdicional p {
+            margin: 8px 0;
+            font-size: 0.9rem;
+        }
+        
+        /* Melhorias para mobile */
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.3rem;
+            }
+            
+            .funcao {
+                font-size: 1rem;
+            }
+            
+            .grafico-container {
+                height: 250px;
+                min-height: 250px;
+            }
+            
+            select, input {
+                padding: 8px;
+                height: 36px;
+            }
+            
+            button {
+                padding: 10px;
+            }
+        }
+        
+        /* Ajustes para tablets */
+        @media (min-width: 768px) {
+            .grafico-container {
+                height: 400px;
+            }
+        }
+        
+        /* Efeito de toque em botões */
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        /* Melhor legibilidade em inputs */
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gerador de Gráficos de Funções</h1>
+        
+        <div class="input-group">
+            <label for="tipoFuncao">Tipo de Função:</label>
+            <select id="tipoFuncao" onchange="mudarTipoFuncao()">
+                <option value="quadratica">Quadrática (f(x) = ax² + bx + c)</option>
+                <option value="afim">Afim/Linear (f(x) = ax + b)</option>
+                <option value="exponencial">Exponencial (f(x) = a^x)</option>
+            </select>
+        </div>
+        
+        <div id="parametrosQuadratica" class="input-group">
+            <label for="coefA">Coeficiente a (x²):</label>
+            <input type="number" id="coefA" step="any" value="1">
+            
+            <label for="coefB">Coeficiente b (x):</label>
+            <input type="number" id="coefB" step="any" value="0">
+            
+            <label for="coefC">Coeficiente c (termo independente):</label>
+            <input type="number" id="coefC" step="any" value="0">
+        </div>
+        
+        <div id="parametrosAfim" class="input-group" style="display:none;">
+            <label for="coefA_afim">Coeficiente a (inclinação):</label>
+            <input type="number" id="coefA_afim" step="any" value="2">
+            
+            <label for="coefB_afim">Coeficiente b (intercepto y):</label>
+            <input type="number" id="coefB_afim" step="any" value="3">
+        </div>
+        
+        <div id="parametrosExponencial" class="input-group" style="display:none;">
+            <label for="baseExp">Base (a):</label>
+            <input type="number" id="baseExp" step="any" min="0.1" value="2">
+            
+            <label for="coefC_exp">Coeficiente c (f(x) = a^(x+c)):</label>
+            <input type="number" id="coefC_exp" step="any" value="0">
+        </div>
+        
+        <div class="input-group">
+            <label for="xMin">Valor mínimo de x:</label>
+            <input type="number" id="xMin" step="any" value="-5">
+            
+            <label for="xMax">Valor máximo de x:</label>
+            <input type="number" id="xMax" step="any" value="5">
+        </div>
+        
+        <button onclick="gerarGrafico()">Gerar Gráfico</button>
+        
+        <div id="resultado">
+            <div class="funcao" id="expressaoFuncao">f(x) = 1x² + 0x + 0</div>
+            <div id="infoAdicional"></div>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table class="tabela-valores" id="tabelaValores">
+                <thead>
+                    <tr>
+                        <th>x</th>
+                        <th>f(x)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Valores serão inseridos aqui pelo JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="container grafico-container">
+        <h2>Gráfico da Função</h2>
+        <canvas id="graficoFuncao"></canvas>
+    </div>
+
+    <script>
+        let myChart = null;
+        
+        function mudarTipoFuncao() {
+            const tipo = document.getElementById('tipoFuncao').value;
+            
+            document.getElementById('parametrosQuadratica').style.display = 'none';
+            document.getElementById('parametrosAfim').style.display = 'none';
+            document.getElementById('parametrosExponencial').style.display = 'none';
+            
+            if (tipo === 'quadratica') {
+                document.getElementById('parametrosQuadratica').style.display = 'block';
+                document.getElementById('expressaoFuncao').textContent = 'f(x) = 1x² + 0x + 0';
+            } else if (tipo === 'afim') {
+                document.getElementById('parametrosAfim').style.display = 'block';
+                document.getElementById('expressaoFuncao').textContent = 'f(x) = 2x + 3';
+            } else if (tipo === 'exponencial') {
+                document.getElementById('parametrosExponencial').style.display = 'block';
+                document.getElementById('expressaoFuncao').textContent = 'f(x) = 2^x';
+            }
+        }
+        
+        function gerarGrafico() {
+            const tipo = document.getElementById('tipoFuncao').value;
+            const xMin = parseFloat(document.getElementById('xMin').value);
+            const xMax = parseFloat(document.getElementById('xMax').value);
+            
+            if (isNaN(xMin) || isNaN(xMax) || xMin >= xMax) {
+                alert("Por favor, informe valores válidos para o intervalo de x (xMin < xMax)!");
+                return;
+            }
+            
+            if (tipo === 'quadratica') {
+                const a = parseFloat(document.getElementById('coefA').value);
+                const b = parseFloat(document.getElementById('coefB').value);
+                const c = parseFloat(document.getElementById('coefC').value);
+                
+                if (isNaN(a) || isNaN(b) || isNaN(c)) {
+                    alert("Por favor, informe todos os coeficientes para a função quadrática!");
+                    return;
+                }
+                
+                document.getElementById('expressaoFuncao').textContent = 
+                    `f(x) = ${formatarTermo(a, 'x²')} ${formatarTermo(b, 'x', true)} ${formatarTermo(c, '', true)}`;
+                
+                gerarGraficoQuadratica(a, b, c, xMin, xMax);
+            } 
+            else if (tipo === 'afim') {
+                const a = parseFloat(document.getElementById('coefA_afim').value);
+                const b = parseFloat(document.getElementById('coefB_afim').value);
+                
+                if (isNaN(a) || isNaN(b)) {
+                    alert("Por favor, informe todos os coeficientes para a função afim!");
+                    return;
+                }
+                
+                document.getElementById('expressaoFuncao').textContent = 
+                    `f(x) = ${formatarTermo(a, 'x')} ${formatarTermo(b, '', true)}`;
+                
+                gerarGraficoAfim(a, b, xMin, xMax);
+            }
+            else if (tipo === 'exponencial') {
+                const base = parseFloat(document.getElementById('baseExp').value);
+                const c = parseFloat(document.getElementById('coefC_exp').value);
+                
+                if (isNaN(base) || base <= 0 || isNaN(c)) {
+                    alert("Por favor, informe uma base positiva para a função exponencial!");
+                    return;
+                }
+                
+                if (c === 0) {
+                    document.getElementById('expressaoFuncao').textContent = `f(x) = ${base}^x`;
+                } else {
+                    document.getElementById('expressaoFuncao').textContent = `f(x) = ${base}^(x${c > 0 ? '+' : ''}${c})`;
+                }
+                
+                gerarGraficoExponencial(base, c, xMin, xMax);
+            }
+        }
+        
+        function formatarTermo(coef, variavel, comSinal = false) {
+            if (coef === 0) return '';
+            
+            let termo = '';
+            
+            if (comSinal) {
+                if (coef > 0) termo += '+ ';
+                else termo += '- ';
+            } else if (coef < 0) {
+                termo += '-';
+            }
+            
+            const absCoef = Math.abs(coef);
+            
+            if (absCoef === 1 && variavel !== '') {
+                termo += variavel;
+            } else {
+                termo += absCoef + variavel;
+            }
+            
+            return termo;
+        }
+        
+        function gerarGraficoQuadratica(a, b, c, xMin, xMax) {
+            const ctx = document.getElementById('graficoFuncao').getContext('2d');
+            
+            // Calcular pontos para o gráfico
+            const pontos = [];
+            const tabelaBody = document.querySelector('#tabelaValores tbody');
+            tabelaBody.innerHTML = '';
+            
+            const step = (xMax - xMin) / 100;
+            for (let x = xMin; x <= xMax; x += step) {
+                const y = a * x * x + b * x + c;
+                pontos.push({x, y});
+                
+                // Adicionar alguns valores para a tabela (apenas valores inteiros de x)
+                if (Number.isInteger(x)) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${x}</td><td>${y.toFixed(2)}</td>`;
+                    tabelaBody.appendChild(row);
+                }
+            }
+            
+            // Calcular raízes e vértice para informações adicionais
+            const delta = b * b - 4 * a * c;
+            let raizesInfo = '';
+            let verticeInfo = '';
+            
+            if (delta >= 0) {
+                const x1 = (-b + Math.sqrt(delta)) / (2 * a);
+                const x2 = (-b - Math.sqrt(delta)) / (2 * a);
+                
+                if (delta === 0) {
+                    raizesInfo = `Raiz dupla: x = ${x1.toFixed(2)}`;
+                } else {
+                    raizesInfo = `Raízes: x₁ = ${x1.toFixed(2)}, x₂ = ${x2.toFixed(2)}`;
+                }
+            } else {
+                raizesInfo = "Não possui raízes reais";
+            }
+            
+            const xv = -b / (2 * a);
+            const yv = a * xv * xv + b * xv + c;
+            verticeInfo = `Vértice: (${xv.toFixed(2)}, ${yv.toFixed(2)})`;
+            
+            document.getElementById('infoAdicional').innerHTML = `
+                <p>${raizesInfo}</p>
+                <p>${verticeInfo}</p>
+                <p>Concavidade: ${a > 0 ? 'Para cima (a > 0)' : 'Para baixo (a < 0)'}</p>
+            `;
+            
+            // Configurar e desenhar o gráfico
+            configurarGrafico(ctx, pontos, xMin, xMax, 'Função Quadrática');
+        }
+        
+        function gerarGraficoAfim(a, b, xMin, xMax) {
+            const ctx = document.getElementById('graficoFuncao').getContext('2d');
+            
+            // Calcular pontos para o gráfico
+            const pontos = [];
+            const tabelaBody = document.querySelector('#tabelaValores tbody');
+            tabelaBody.innerHTML = '';
+            
+            const step = (xMax - xMin) / 100;
+            for (let x = xMin; x <= xMax; x += step) {
+                const y = a * x + b;
+                pontos.push({x, y});
+                
+                // Adicionar alguns valores para a tabela (apenas valores inteiros de x)
+                if (Number.isInteger(x)) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${x}</td><td>${y.toFixed(2)}</td>`;
+                    tabelaBody.appendChild(row);
+                }
+            }
+            
+            // Calcular raiz (zero da função)
+            const raiz = -b / a;
+            
+            document.getElementById('infoAdicional').innerHTML = `
+                <p>Raiz: x = ${raiz.toFixed(2)}</p>
+                <p>Inclinação: ${a > 0 ? 'Positiva' : 'Negativa'}</p>
+                <p>Intercepto Y: (0, ${b})</p>
+            `;
+            
+            // Configurar e desenhar o gráfico
+            configurarGrafico(ctx, pontos, xMin, xMax, 'Função Afim/Linear');
+        }
+        
+        function gerarGraficoExponencial(base, c, xMin, xMax) {
+            const ctx = document.getElementById('graficoFuncao').getContext('2d');
+            
+            // Calcular pontos para o gráfico
+            const pontos = [];
+            const tabelaBody = document.querySelector('#tabelaValores tbody');
+            tabelaBody.innerHTML = '';
+            
+            const step = (xMax - xMin) / 100;
+            for (let x = xMin; x <= xMax; x += step) {
+                const y = Math.pow(base, x + c);
+                pontos.push({x, y});
+                
+                // Adicionar alguns valores para a tabela (apenas valores inteiros de x)
+                if (Number.isInteger(x)) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${x}</td><td>${y.toFixed(2)}</td>`;
+                    tabelaBody.appendChild(row);
+                }
+            }
+            
+            // Informações adicionais
+            const crescimento = base > 1 ? 'Crescente' : (base < 1 ? 'Decrescente' : 'Constante');
+            
+            document.getElementById('infoAdicional').innerHTML = `
+                <p>Comportamento: ${crescimento}</p>
+                <p>Assíntota horizontal: y = 0</p>
+                <p>Intercepto Y: (0, ${Math.pow(base, c).toFixed(2)})</p>
+            `;
+            
+            // Configurar e desenhar o gráfico
+            configurarGrafico(ctx, pontos, xMin, xMax, 'Função Exponencial');
+        }
+        
+        function configurarGrafico(ctx, pontos, xMin, xMax, label) {
+            // Destruir gráfico anterior se existir
+            if (myChart) {
+                myChart.destroy();
+            }
+            
+            // Determinar intervalo y
+            let yMin = Infinity, yMax = -Infinity;
+            pontos.forEach(ponto => {
+                if (ponto.y < yMin) yMin = ponto.y;
+                if (ponto.y > yMax) yMax = ponto.y;
+            });
+            
+            // Ajustar limites para garantir visibilidade dos eixos
+            const paddingY = Math.max(1, (yMax - yMin) * 0.1);
+            yMin = Math.min(yMin - paddingY, 0);
+            yMax = Math.max(yMax + paddingY, 0);
+            
+            // Configuração do gráfico com eixos X horizontal e Y vertical
+            const config = {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: label,
+                        data: pontos.map(p => ({x: p.x, y: p.y})),
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 0,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Eixo X',
+                                font: {
+                                    weight: 'bold',
+                                    size: 12
+                                }
+                            },
+                            min: xMin,
+                            max: xMax,
+                            grid: {
+                                color: function(context) {
+                                    return context.tick.value === 0 ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.1)';
+                                },
+                                lineWidth: function(context) {
+                                    return context.tick.value === 0 ? 2 : 1;
+                                }
+                            },
+                            ticks: {
+                                color: 'rgba(0, 0, 0, 0.8)',
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Eixo Y',
+                                font: {
+                                    weight: 'bold',
+                                    size: 12
+                                }
+                            },
+                            min: yMin,
+                            max: yMax,
+                            grid: {
+                                color: function(context) {
+                                    return context.tick.value === 0 ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.1)';
+                                },
+                                lineWidth: function(context) {
+                                    return context.tick.value === 0 ? 2 : 1;
+                                }
+                            },
+                            ticks: {
+                                color: 'rgba(0, 0, 0, 0.8)',
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `f(${context.parsed.x.toFixed(2)}) = ${context.parsed.y.toFixed(2)}`;
+                                }
+                            },
+                            bodyFont: {
+                                size: 12
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            };
+            
+            // Criar o gráfico
+            myChart = new Chart(ctx, config);
+        }
+        
+        // Inicializar com a função quadrática
+        mudarTipoFuncao();
+        
+        // Gerar gráfico inicial
+        window.addEventListener('load', function() {
+            setTimeout(gerarGrafico, 300);
+        });
+    </script>
+</body>
+</html>
